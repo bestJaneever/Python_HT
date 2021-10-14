@@ -20,6 +20,10 @@ def remove_character(split_list, character):
     split_list = [i.strip(character) for i in split_list] # remove "'"
     return split_list
 
+def normalize_elements(words):
+    words = [w.lower() for w in words]
+    words[0] = words[0].capitalize()
+    return words
 
 def get_main_text_and_last_sentence(split_list):
     pre_final_text = [] # create a variable for transform text without last sentence
@@ -30,8 +34,7 @@ def get_main_text_and_last_sentence(split_list):
         paragraph = [] # create a list with separate sentences
         for i in sentences: # i - each element of the sentences
             words = i.split() # split each sentence into words
-            words = [w.lower() for w in words] # lowercase each word
-            words[0] = words[0].capitalize() # capitalize first word
+            words = normalize_elements(words)
             last_sentence.append(words[-1]) # add last words of the sentences
             join_words = ' '.join(words) + '.' # join words to sentences
             paragraph.append(join_words) # add sentences to paragraphs

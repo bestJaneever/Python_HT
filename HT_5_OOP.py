@@ -1,6 +1,7 @@
 from datetime import datetime
 import random  # function to generate random numbers
-
+import os
+from HT_4 import normalize_elements
 
 class News:
     def __init__(self, text, city):
@@ -54,11 +55,63 @@ class Phrase:
             file.write(self.phrase_of_the_day)
 
 
+class File:
+
+    def __init__(self, input_format, filepath='Files\myfile'):
+        self.input_format = input_format
+        self.filepath = filepath
+
+    def process_file(self):
+        if self.input_format == 'One':
+            with open(self.filepath, 'r') as file, open('Newsfeed.txt', 'a') as update_file:
+                s = file.readline()
+                words = s.split()
+                words = normalize_elements(words)
+                s = ' '.join(words)
+                update_file.write('\n')
+                update_file.write(s + '\n')
+        elif self.input_format == 'Many':
+            with open(self.filepath, 'r') as file, open('Newsfeed.txt', 'a') as update_file:
+                s = file.read()
+                lines = s.split('\n')
+                l = []
+                for line in lines:
+                    words = line.split()
+                    words = normalize_elements(words)
+                    s = ' '.join(words)
+                    l.append(s)
+                lines = '\n'.join(l)
+                update_file.write('\n')
+                update_file.write(lines + '\n')
+
+    def remove_file(self):
+        os.remove(self.filepath)
+
+    def isfileexists(self):
+        if os.path.exists(self.filepath):
+            return True
+        else:
+            return False
+
+
 def main():
     name_class = input('What do you want to share: News? Advertising?'
                        ' Or we can share phrase of the day with you!'
+                       ' If you want to add this from file - enter File'
                        ' Or press "Enter" for quit. Please, make your choice: ')
-    if name_class == 'News':
+    if name_class == 'File':
+        input_format = input('Enter format: One or Many records')
+        filepath = input('Define file path here or enter "Default" for default')
+        if filepath == 'Default':
+            f = File(input_format)
+        else:
+            f = File(input_format,filepath)
+        if f.isfileexists():
+            f.process_file()
+            f.remove_file()
+        else:
+            print("File doesn't exist")
+    elif name_class == 'News':
         message = input('Enter your text here: ')
         city = input('Enter your city here: ')
         news = News(message, city)
@@ -79,3 +132,5 @@ def main():
 
 
 main()
+
+
