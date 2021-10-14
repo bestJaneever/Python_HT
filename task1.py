@@ -1,4 +1,4 @@
-Random list creation
+#Random list creation
 import random  # function to generate random numbers
 
 random_numbers = random.sample(range(0, 1000), 100)  # generate 100 random numbers between 0 and 1000
