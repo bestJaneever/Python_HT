@@ -1,6 +1,7 @@
 from datetime import datetime
 import random  # function to generate random numbers
 import os
+import json
 from HT_4 import normalize_elements
 
 class News:
@@ -93,6 +94,45 @@ class File:
         else:
             return False
 
+class Json:
+
+    def __init__(self, input_format, filepath='Files\\file.json'):
+        self.input_format = input_format
+        self.filepath = filepath
+
+    def process_file(self):
+        if self.input_format == 'One':
+            with open(self.filepath, 'r') as file, open('Newsfeed.txt', 'a') as update_file:
+                s = json.load(file)
+                update_file.write('\n')
+                update_file.write(s[0]["Category"])
+                update_file.write('\n')
+                update_file.write(s[0]["Text"])
+                update_file.write('\n')
+                update_file.write(s[0]["city"])
+                update_file.write('\t')
+                update_file.write(s[0]["date"])
+        elif self.input_format == 'Many':
+            with open(self.filepath, 'r') as file, open('Newsfeed.txt', 'a') as update_file:
+                s = json.load(file)
+                for i in s:
+                    update_file.write('\n')
+                    update_file.write(i["Category"])
+                    update_file.write('\n')
+                    update_file.write(i["Text"])
+                    update_file.write('\n')
+                    update_file.write(i["city"])
+                    update_file.write('\t')
+                    update_file.write(i["date"])
+
+    def remove_file(self):
+        os.remove(self.filepath)
+
+    def isfileexists(self):
+        if os.path.exists(self.filepath):
+            return True
+        else:
+            return False
 
 def main():
     name_class = input('What do you want to share: News? Advertising?'
@@ -106,6 +146,18 @@ def main():
             f = File(input_format)
         else:
             f = File(input_format,filepath)
+        if f.isfileexists():
+            f.process_file()
+            f.remove_file()
+        else:
+            print("File doesn't exist")
+    elif name_class == 'Json':
+        input_format = input('Enter format: One or Many records')
+        filepath = input('Define file path here or enter "Default" for default')
+        if filepath == 'Default':
+            f = Json(input_format)
+        else:
+            f = Json(input_format,filepath)
         if f.isfileexists():
             f.process_file()
             f.remove_file()
