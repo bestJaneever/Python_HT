@@ -2,6 +2,7 @@ from datetime import datetime
 import random  # function to generate random numbers
 import os
 import json
+import xml.etree.ElementTree as ET
 from HT_4 import normalize_elements
 
 class News:
@@ -134,6 +135,51 @@ class Json:
         else:
             return False
 
+
+class XML:
+
+    def __init__(self, input_format, filepath='Files\\file_xml.xml'):
+        self.input_format = input_format
+        self.filepath = filepath
+
+    def process_file(self):
+        if self.input_format == 'One':
+            tree = ET.parse(self.filepath)
+            root = tree.getroot()
+            with open('Newsfeed.txt', 'a') as update_file:
+                update_file.write('\n')
+                update_file.write(root[0][0].text)
+                update_file.write('\n')
+                update_file.write(root[0][1].text)
+                update_file.write('\n')
+                update_file.write(root[0][2].text)
+                update_file.write('\t')
+                update_file.write(root[0][3].text)
+        elif self.input_format == 'Many':
+            tree = ET.parse(self.filepath)
+            root = tree.getroot()
+            with open('Newsfeed.txt', 'a') as update_file:
+                for i in root:
+                    update_file.write('\n')
+                    update_file.write(i[0].text)
+                    update_file.write('\n')
+                    update_file.write(i[1].text)
+                    update_file.write('\n')
+                    update_file.write(i[2].text)
+                    update_file.write('\t')
+                    update_file.write(i[3].text)
+
+
+
+    def remove_file(self):
+        os.remove(self.filepath)
+
+    def isfileexists(self):
+        if os.path.exists(self.filepath):
+            return True
+        else:
+            return False
+
 def main():
     name_class = input('What do you want to share: News? Advertising?'
                        ' Or we can share phrase of the day with you!'
@@ -158,6 +204,18 @@ def main():
             f = Json(input_format)
         else:
             f = Json(input_format,filepath)
+        if f.isfileexists():
+            f.process_file()
+            f.remove_file()
+        else:
+            print("File doesn't exist")
+    elif name_class == 'XML':
+        input_format = input('Enter format: One or Many records')
+        filepath = input('Define file path here or enter "Default" for default')
+        if filepath == 'Default':
+            f = XML(input_format)
+        else:
+            f = XML(input_format, filepath)
         if f.isfileexists():
             f.process_file()
             f.remove_file()
