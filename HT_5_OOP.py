@@ -3,7 +3,7 @@ import random  # function to generate random numbers
 import os
 import json
 import xml.etree.ElementTree as ET
-import sqlite3
+import pyodbc
 from HT_4 import normalize_elements
 
 class News:
@@ -182,10 +182,10 @@ class XML:
 
 class DB:
 
-    def __init__(self, filepath='News.db'):
+    def __init__(self, filepath='News.db', driver='SQLite3 ODBC Driver'):
         self.filepath = filepath
-
-        self.conn = sqlite3.connect(self.filepath)
+        self.driver = driver
+        self.conn = pyodbc.connect(f'DRIVER={self.driver};DIRECT=True;DATABASE={self.filepath}')
         self.cur = self.conn.cursor()
         self.cur.execute("""CREATE TABLE IF NOT EXISTS News(
                    Record_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -211,19 +211,36 @@ class DB:
 
     def add_record(self, table, *args):
         l = [*args]
-        if table == 'Phrase':
-            self.cur.execute("""
-            INSERT INTO Phrase (Text) VALUES (?)
-            """, l)
-        elif table == 'News':
-            self.cur.execute("""
-            INSERT INTO News (Text, city, date) VALUES (?, ?, ?)
-            """, l)
-        elif table == 'Advertising':
-            self.cur.execute("""
-            INSERT INTO Advertising (Text, expiration_date, days_left) VALUES (?, ?, ?)
-            """, l)
-        self.conn.commit()
+        if not self.duplicate_check(table, l):
+            if table == 'Phrase':
+                self.cur.execute("""
+                INSERT INTO Phrase (Text) VALUES (?)
+                """, l)
+            elif table == 'News':
+                self.cur.execute("""
+                INSERT INTO News (Text, city, date) VALUES (?, ?, ?)
+                """, l)
+            elif table == 'Advertising':
+                self.cur.execute("""
+                INSERT INTO Advertising (Text, expiration_date, days_left) VALUES (?, ?, ?)
+                """, l)
+            self.conn.commit()
+        else:
+            print('This record is already exists')
+
+    def duplicate_check(self, table, *args):
+        self.cur.execute(f"SELECT * from {table}")
+        res = self.cur.fetchall()
+        flag = False
+        for r in res:
+            print('args', tuple(*args))
+            print(r[1:], type(r[1:]))
+            if tuple(*args) == r[1:]:
+                return True
+            else:
+                continue
+        return flag
+
 
 
 def main():
@@ -280,7 +297,7 @@ def main():
         adv = Advertising(message, expiration_date)
         adv.publish()
         d = DB()
-        d.add_record('Advertising', message, expiration_date, adv.days_left)
+        d.add_record('Advertising', message, expiration_date, str(adv.days_left))
         main()
     elif name_class == 'Phrase':
         phr = Phrase()
