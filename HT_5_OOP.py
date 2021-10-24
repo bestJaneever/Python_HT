@@ -3,6 +3,7 @@ import random  # function to generate random numbers
 import os
 import json
 import xml.etree.ElementTree as ET
+import sqlite3
 from HT_4 import normalize_elements
 
 class News:
@@ -169,8 +170,6 @@ class XML:
                     update_file.write('\t')
                     update_file.write(i[3].text)
 
-
-
     def remove_file(self):
         os.remove(self.filepath)
 
@@ -179,6 +178,53 @@ class XML:
             return True
         else:
             return False
+
+
+class DB:
+
+    def __init__(self, filepath='News.db'):
+        self.filepath = filepath
+
+        self.conn = sqlite3.connect(self.filepath)
+        self.cur = self.conn.cursor()
+        self.cur.execute("""CREATE TABLE IF NOT EXISTS News(
+                   Record_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                   Text TEXT,
+                   city TEXT,
+                   date TEXT);
+                """)
+        self.conn.commit()
+
+        self.cur.execute("""CREATE TABLE IF NOT EXISTS Advertising(
+                  Record_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  Text TEXT,
+                  expiration_date TEXT,
+                  days_left TEXT);
+               """)
+        self.conn.commit()
+
+        self.cur.execute("""CREATE TABLE IF NOT EXISTS Phrase(
+                  Record_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  Text TEXT);
+               """)
+        self.conn.commit()
+
+    def add_record(self, table, *args):
+        l = [*args]
+        if table == 'Phrase':
+            self.cur.execute("""
+            INSERT INTO Phrase (Text) VALUES (?)
+            """, l)
+        elif table == 'News':
+            self.cur.execute("""
+            INSERT INTO News (Text, city, date) VALUES (?, ?, ?)
+            """, l)
+        elif table == 'Advertising':
+            self.cur.execute("""
+            INSERT INTO Advertising (Text, expiration_date, days_left) VALUES (?, ?, ?)
+            """, l)
+        self.conn.commit()
+
 
 def main():
     name_class = input('What do you want to share: News? Advertising?'
@@ -191,7 +237,7 @@ def main():
         if filepath == 'Default':
             f = File(input_format)
         else:
-            f = File(input_format,filepath)
+            f = File(input_format, filepath)
         if f.isfileexists():
             f.process_file()
             f.remove_file()
@@ -226,16 +272,21 @@ def main():
         city = input('Enter your city here: ')
         news = News(message, city)
         news.publish()
-        main()
+        d = DB()
+        d.add_record('News', message, city, news.date)
     elif name_class == 'Advertising':
         message = input('Enter your text here: ')
         expiration_date = input('Actual till: (please, use the following format: dd/mm/yyyy ')
         adv = Advertising(message, expiration_date)
         adv.publish()
+        d = DB()
+        d.add_record('Advertising', message, expiration_date, adv.days_left)
         main()
     elif name_class == 'Phrase':
         phr = Phrase()
         phr.publish()
+        d = DB()
+        d.add_record('Phrase', phr.phrase_of_the_day)
         main()
     else:
         print('Goodbye!')
